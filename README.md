@@ -1,0 +1,2 @@
+# Clickzz
+Crazy clicker game
