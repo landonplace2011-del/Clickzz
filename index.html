@@ -2,259 +2,277 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Ultimate Clicker</title>
-
-<!-- Favicon & PWA -->
-<link rel="icon" type="image/png" sizes="512x512" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Ultimate Clicker">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4ade80">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hard Clicker</title>
 
 <style>
-:root {
-  --bg:#0f1220;
-  --panel:#181c3a;
-  --accent:#4ade80;
-  --accent2:#60a5fa;
-  --danger:#ef4444;
-  --text:#e5e7eb;
-}
-* { box-sizing:border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
-body { margin:0; background:var(--bg); color:var(--text); text-align:center; }
-h1 { margin:10px 0; }
-button { background:var(--accent); border:none; padding:12px; border-radius:10px; font-size:16px; cursor:pointer; margin:5px; }
-button:disabled { opacity:0.4; cursor:not-allowed; }
-.panel { background:var(--panel); margin:10px; padding:15px; border-radius:15px; }
-.tabs button { background:var(--accent2); }
-.hidden { display:none; }
-.upgrade { display:flex; justify-content:space-between; align-items:center; margin:8px 0; background:#0b0f2a; padding:10px; border-radius:10px; }
-input { padding:10px; border-radius:8px; border:none; width:80%; margin:5px 0; }
-.leaderboard-entry { display:flex; justify-content:space-between; }
-#tapButton { font-size:48px; padding:30px 50px; border-radius:20px; background:var(--accent); color:var(--text); transition: transform 0.1s; }
-#tapButton:active { transform: scale(0.95); }
+  body {
+    font-family: Arial, sans-serif;
+    background:#111;
+    color:white;
+    text-align:center;
+    user-select:none;
+  }
+
+  .tapButton {
+    width:220px;
+    height:220px;
+    border-radius:50%;
+    font-size:28px;
+    border:none;
+    background:#00bfff;
+    color:black;
+    margin:20px;
+    touch-action:manipulation;
+  }
+
+  .tapButton:active { transform:scale(0.95); }
+
+  #energyBarContainer {
+    width:240px;
+    height:16px;
+    background:#333;
+    margin:10px auto;
+    border-radius:8px;
+    overflow:hidden;
+  }
+
+  #energyBar {
+    height:100%;
+    background:limegreen;
+    width:100%;
+  }
+
+  #bossBarContainer {
+    width:240px;
+    height:16px;
+    background:#400;
+    margin:10px auto;
+    border-radius:8px;
+    overflow:hidden;
+    display:none;
+  }
+
+  #bossBar {
+    height:100%;
+    background:red;
+    width:100%;
+  }
+
+  .hardcore { background:darkred; color:white; }
+
+  .popup {
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#222;
+    padding:12px 20px;
+    border-radius:10px;
+    animation:fade 3s forwards;
+  }
+
+  @keyframes fade {
+    0%{opacity:1}
+    80%{opacity:1}
+    100%{opacity:0}
+  }
 </style>
 </head>
 
 <body>
-<h1>🔥 Ultimate Clicker</h1>
 
-<div class="panel">
-  <div>Player: <b id="playerName"></b></div>
-  <button onclick="changeName()">Change Name</button>
+<h1>Hard Clicker</h1>
+<div id="score">Score: 0</div>
+<div id="combo">Combo: x1</div>
+
+<button class="tapButton" id="tapBtn">TAP</button>
+
+<div id="energyBarContainer">
+  <div id="energyBar"></div>
 </div>
 
-<div class="panel">
-  <h2>Clicks</h2>
-  <h1 id="clicks">0</h1>
-  <button id="tapButton" onclick="manualClick()">CLICK</button>
-  <div>Click Power: <span id="clickPower">1</span></div>
-  <div>Auto CPS: <span id="cps">0</span></div>
+<div id="bossBarContainer">
+  <div id="bossBar"></div>
 </div>
 
-<div class="panel tabs">
-  <button onclick="showTab('click')">Click Power</button>
-  <button onclick="showTab('auto')">Auto</button>
-  <button onclick="showTab('multi')">Multipliers</button>
-  <button onclick="showTab('prestige')">Prestige</button>
-  <button onclick="showTab('leader')">Leaderboard</button>
-</div>
-
-<div class="panel" id="tab-click">
-  <h2>Click Power Upgrades</h2>
-  <div id="clickUpgrades"></div>
-</div>
-
-<div class="panel hidden" id="tab-auto">
-  <h2>Auto Clickers</h2>
-  <div id="autoUpgrades"></div>
-</div>
-
-<div class="panel hidden" id="tab-multi">
-  <h2>Multipliers</h2>
-  <div id="multiUpgrades"></div>
-</div>
-
-<div class="panel hidden" id="tab-prestige">
-  <h2>Prestige</h2>
-  <p>Prestige Level: <b id="prestigeLevel">0</b></p>
-  <p>Prestige Bonus: +<span id="prestigeBonus">0</span>%</p>
-  <button style="background:var(--danger)" onclick="prestige()">PRESTIGE RESET</button>
-</div>
-
-<div class="panel hidden" id="tab-leader">
-  <h2>Leaderboard</h2>
-  <button onclick="generateCode()">Generate Share Code</button>
-  <p id="shareCode"></p>
-  <input id="codeInput" placeholder="Paste friend code">
-  <button onclick="addCode()">Add</button>
-  <div id="leaderboard"></div>
-</div>
+<button id="upgradeClick">+ Click Power (50)</button>
+<button id="upgradeAuto">+ Auto Clicker (100)</button>
+<button id="hardcoreToggle">Hardcore: OFF</button>
 
 <script>
-let data = JSON.parse(localStorage.getItem("clickerSave")) || {
-  name: "", clicks:0, clickPower:1, cps:0, prestige:0, leaders:[], lastTime:Date.now()
+/* ---------- STATE ---------- */
+let score=0, clickPower=1, autoPower=0;
+let energy=100, maxEnergy=100, energyRegen=0.8, clickEnergyCost=3;
+let hardcore=false;
+
+/* COMBO */
+let combo=1, comboTimer=null;
+
+/* BOSS */
+let bossActive=false;
+let bossHP=0, bossMaxHP=0;
+
+/* ACHIEVEMENTS */
+let achievements={
+  firstClick:false,
+  combo10:false,
+  bossKill:false,
+  hardcoreBoss:false
 };
 
-if(!data.name){
-  data.name = prompt("Enter your name:");
-  save();
+/* ---------- CLICK ---------- */
+tapBtn.onclick=()=>{
+  if(energy<=0) return;
+
+  energy-=clickEnergyCost;
+
+  if(bossActive){
+    bossHP-=clickPower*combo;
+    updateBoss();
+    if(bossHP<=0) defeatBoss();
+  } else {
+    score+=clickPower*combo;
+  }
+
+  combo++;
+  resetComboTimer();
+  checkAchievements();
+  updateUI();
+};
+
+/* ---------- COMBO RESET ---------- */
+function resetComboTimer(){
+  clearTimeout(comboTimer);
+  comboTimer=setTimeout(()=>{
+    combo=1;
+    updateUI();
+  },800);
 }
 
-// Offline earnings
-let now = Date.now();
-let diff = Math.floor((now - data.lastTime)/1000);
-let maxOffline = 60*60*8;
-diff = Math.min(diff,maxOffline);
-if(diff > 5 && data.cps>0){
-  let earned = diff*data.cps;
-  alert(`Welcome back!\nYou earned ${earned} clicks while offline.`);
-  data.clicks += earned;
+/* ---------- ENERGY ---------- */
+setInterval(()=>{
+  energy=Math.min(maxEnergy,energy+energyRegen);
+  updateEnergy();
+},1000);
+
+/* ---------- AUTO ---------- */
+setInterval(()=>{
+  if(autoPower>0 && (!hardcore || energy>0)){
+    score+=autoPower;
+    updateUI();
+  }
+},1000);
+
+/* ---------- UPGRADES ---------- */
+upgradeClick.onclick=()=>{
+  if(score>=50){
+    score-=50;
+    clickPower++;
+    updateUI();
+  }
+};
+
+upgradeAuto.onclick=()=>{
+  if(score>=100){
+    score-=100;
+    autoPower++;
+    updateUI();
+  }
+};
+
+/* ---------- HARDCORE ---------- */
+hardcoreToggle.onclick=()=>{
+  hardcore=!hardcore;
+  hardcoreToggle.textContent=hardcore?"Hardcore: ON":"Hardcore: OFF";
+  hardcoreToggle.classList.toggle("hardcore",hardcore);
+  clickEnergyCost=hardcore?6:3;
+};
+
+/* ---------- BOSS SYSTEM ---------- */
+setInterval(()=>{
+  if(!bossActive && score>=500){
+    startBoss();
+  }
+},2000);
+
+function startBoss(){
+  bossActive=true;
+  bossMaxHP=hardcore?1500:1000;
+  bossHP=bossMaxHP;
+  bossBarContainer.style.display="block";
+  showPopup("👾 BOSS FIGHT!");
 }
 
-const clickUpgrades = [
-  {name:"+1 Click", cost:10, power:1},
-  {name:"+5 Clicks", cost:100, power:5},
-  {name:"+25 Clicks", cost:1000, power:25},
-  {name:"+100 Clicks", cost:5000, power:100},
-  {name:"+250 Clicks", cost:10000, power:250},
-  {name:"+500 Clicks", cost:25000, power:500},
-  {name:"+1,000 Clicks", cost:60000, power:1000},
-  {name:"+2,500 Clicks", cost:150000, power:2500},
-  {name:"+5,000 Clicks", cost:400000, power:5000},
-  {name:"+10,000 Clicks", cost:1000000, power:10000},
-  {name:"+25,000 Clicks", cost:2500000, power:25000},
-  {name:"+50,000 Clicks", cost:6000000, power:50000},
-  {name:"+100,000 Clicks", cost:15000000, power:100000},
-  {name:"+250,000 Clicks", cost:40000000, power:250000}
-];
-
-const autoUpgrades = [
-  {name:"Cursor", cost:50, cps:1},
-  {name:"Bot", cost:500, cps:5},
-  {name:"Factory", cost:5000, cps:25},
-  {name:"AI Core", cost:50000, cps:150},
-  {name:"Super Cursor", cost:15000, cps:50},
-  {name:"Mini Bot", cost:40000, cps:100},
-  {name:"Mega Bot", cost:100000, cps:250},
-  {name:"Factory 2.0", cost:250000, cps:500},
-  {name:"Advanced AI", cost:600000, cps:1000},
-  {name:"Quantum Bot", cost:1500000, cps:2500},
-  {name:"Nano Factory", cost:4000000, cps:5000},
-  {name:"AI Network", cost:10000000, cps:10000},
-  {name:"Cyber Factory", cost:25000000, cps:25000},
-  {name:"Singularity", cost:60000000, cps:50000}
-];
-
-const multiUpgrades = [
-  {name:"x2 Power", cost:1000, mult:2},
-  {name:"x3 Power", cost:5000, mult:3},
-  {name:"x4 Power", cost:25000, mult:4},
-  {name:"x5 Power", cost:50000, mult:5},
-  {name:"x6 Power", cost:100000, mult:6},
-  {name:"x7 Power", cost:250000, mult:7},
-  {name:"x8 Power", cost:500000, mult:8},
-  {name:"x9 Power", cost:1000000, mult:9},
-  {name:"x10 Power", cost:2500000, mult:10},
-  {name:"x12 Power", cost:5000000, mult:12},
-  {name:"x15 Power", cost:10000000, mult:15},
-  {name:"x20 Power", cost:25000000, mult:20}
-];
-
-function save(){ data.lastTime=Date.now(); localStorage.setItem("clickerSave", JSON.stringify(data)); }
-
-function manualClick(){ data.clicks += data.clickPower*(1 + data.prestige*0.1); update(); }
-
-function update(){
-  document.getElementById("clicks").textContent = Math.floor(data.clicks);
-  document.getElementById("clickPower").textContent = data.clickPower;
-  document.getElementById("cps").textContent = data.cps;
-  document.getElementById("playerName").textContent = data.name;
-  document.getElementById("prestigeLevel").textContent = data.prestige;
-  document.getElementById("prestigeBonus").textContent = data.prestige*10;
-  renderUpgrades();
-  renderLeaderboard();
-  save();
+function updateBoss(){
+  bossBar.style.width=(bossHP/bossMaxHP*100)+"%";
 }
 
-function renderUpgrades(){
-  document.getElementById("clickUpgrades").innerHTML="";
-  clickUpgrades.forEach(u=>{
-    let d=document.createElement("div"); d.className="upgrade";
-    d.innerHTML=`${u.name} (${u.cost}) <button ${data.clicks<u.cost?"disabled":""}>Buy</button>`;
-    d.querySelector("button").onclick=()=>{
-      data.clicks-=u.cost;
-      data.clickPower+=u.power;
-      u.cost=Math.floor(u.cost*1.8);
-      update();
-    }; document.getElementById("clickUpgrades").appendChild(d);
-  });
-
-  document.getElementById("autoUpgrades").innerHTML="";
-  autoUpgrades.forEach(u=>{
-    let d=document.createElement("div"); d.className="upgrade";
-    d.innerHTML=`${u.name} (${u.cost}) <button ${data.clicks<u.cost?"disabled":""}>Buy</button>`;
-    d.querySelector("button").onclick=()=>{
-      data.clicks-=u.cost;
-      data.cps+=u.cps;
-      u.cost=Math.floor(u.cost*2);
-      update();
-    }; document.getElementById("autoUpgrades").appendChild(d);
-  });
-
-  document.getElementById("multiUpgrades").innerHTML="";
-  multiUpgrades.forEach(u=>{
-    let d=document.createElement("div"); d.className="upgrade";
-    d.innerHTML=`${u.name} (${u.cost}) <button ${data.clicks<u.cost?"disabled":""}>Buy</button>`;
-    d.querySelector("button").onclick=()=>{
-      data.clicks-=u.cost;
-      data.clickPower *= u.mult;
-      u.cost=Math.floor(u.cost*3);
-      update();
-    }; document.getElementById("multiUpgrades").appendChild(d);
-  });
+function defeatBoss(){
+  bossActive=false;
+  bossBarContainer.style.display="none";
+  score+=500;
+  showPopup("🏆 Boss Defeated!");
+  achievements.bossKill=true;
+  if(hardcore) achievements.hardcoreBoss=true;
+  saveGame();
 }
 
-function prestige(){ if(confirm("Reset progress for permanent bonuses?")){
-  data.clicks=0; data.clickPower=1; data.cps=0; data.prestige++; update();
-}}
-
-function generateCode(){
-  document.getElementById("shareCode").textContent =
-    btoa(JSON.stringify({n:data.name,s:Math.floor(data.clicks)}));
+/* ---------- ACHIEVEMENTS ---------- */
+function checkAchievements(){
+  if(!achievements.firstClick){
+    achievements.firstClick=true;
+    showPopup("🎉 Achievement: First Click");
+  }
+  if(combo>=10 && !achievements.combo10){
+    achievements.combo10=true;
+    showPopup("🔥 Achievement: Combo x10");
+  }
 }
 
-function addCode(){
-  try{
-    let obj=JSON.parse(atob(document.getElementById("codeInput").value));
-    data.leaders.push(obj);
-    update();
-  }catch{}
+/* ---------- UI ---------- */
+function updateUI(){
+  score=Math.floor(score);
+  scoreEl.textContent="Score: "+score;
+  comboEl.textContent="Combo: x"+combo;
+  updateEnergy();
+  saveGame();
 }
 
-function renderLeaderboard(){
-  let div=document.getElementById("leaderboard");
-  div.innerHTML="";
-  [...data.leaders,{n:data.name,s:Math.floor(data.clicks)}]
-    .sort((a,b)=>b.s-a.s)
-    .forEach(e=>{
-      let d=document.createElement("div"); d.className="leaderboard-entry";
-      d.innerHTML=`<span>${e.n}</span><span>${e.s}</span>`;
-      div.appendChild(d);
-    });
+function updateEnergy(){
+  let p=energy/maxEnergy*100;
+  energyBar.style.width=p+"%";
+  energyBar.style.background=p<25?"red":"limegreen";
 }
 
-function showTab(t){ ["click","auto","multi","prestige","leader"].forEach(x=>{
-  document.getElementById("tab-"+x).classList.add("hidden");
-}); document.getElementById("tab-"+t).classList.remove("hidden"); }
+/* ---------- POPUP ---------- */
+function showPopup(text){
+  let p=document.createElement("div");
+  p.className="popup";
+  p.textContent=text;
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(),3000);
+}
 
-function changeName(){ data.name=prompt("New name:"); update(); }
+/* ---------- SAVE ---------- */
+function saveGame(){
+  localStorage.setItem("hardClickerSave",JSON.stringify({
+    score,clickPower,autoPower,achievements
+  }));
+}
 
-setInterval(()=>{ data.clicks+=data.cps; update(); },1000);
+function loadGame(){
+  let d=JSON.parse(localStorage.getItem("hardClickerSave"));
+  if(!d) return;
+  score=d.score;
+  clickPower=d.clickPower;
+  autoPower=d.autoPower;
+  achievements=d.achievements||achievements;
+  updateUI();
+}
 
-update();
+loadGame();
 </script>
+
 </body>
 </html>
